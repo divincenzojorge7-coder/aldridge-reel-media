@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Edit(oficina-local/datos/**)",
+      "Write(oficina-local/datos/**)",
+      "Bash(python oficina-local/herramientas/originalidad.py *)",
+      "Bash(python oficina-local/herramientas/shorts.py *)",
+      "Bash(python oficina-local/herramientas/youtube.py *)",
+      "Bash(ffmpeg *)",
+      "Bash(ffprobe *)",
+      "Bash(curl -L -o *)",
+      "mcp__higgsfield",
+      "mcp__vidIQ",
+      "mcp__Google_Sheets",
+      "mcp__Metricool_Social_Media_Management",
+      "mcp__claude_ai_higgsfield",
+      "mcp__claude_ai_vidIQ",
+      "mcp__claude_ai_Google_Sheets",
+      "mcp__claude_ai_Metricool_Social_Media_Management"
+    ],
+    "deny": [
+      "Bash(git push *)",
+      "Bash(rm -rf *)",
+      "Read(oficina-local/datos/client_secret.json)",
+      "Read(oficina-local/datos/token_youtube.json)"
+    ]
+  }
+}

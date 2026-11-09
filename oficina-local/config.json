@@ -1,0 +1,57 @@
+{
+  "hoja_control_id": "1L3mB2jceeSCxaedhLo5_e3cE1_Oc61UOnhpxDV87AIw",
+  "idioma": "es",
+  "max_videos_madre_dia": 5,
+  "shorts_por_madre": 6,
+  "duracion_madre_seg": [
+    120,
+    240
+  ],
+  "duracion_short_seg": [
+    15,
+    58
+  ],
+  "publicar_madre": false,
+  "max_publicaciones_dia": 6,
+  "min_horas_entre_publicaciones": 2,
+  "min_creditos_higgsfield": 200,
+  "modelo_embeddings": "paraphrase-multilingual-MiniLM-L12-v2",
+  "modelo_whisper": "small",
+  "originalidad": {
+    "texto": {
+      "tema": 0.8,
+      "gancho": 0.82,
+      "titulo": 0.85,
+      "guion": 0.75,
+      "escena": 0.85
+    },
+    "texto_respaldo": {
+      "tema": 0.6,
+      "gancho": 0.65,
+      "titulo": 0.7,
+      "guion": 0.55,
+      "escena": 0.7
+    },
+    "video": {
+      "fps_muestreo": 1,
+      "distancia_hamming": 8,
+      "max_proporcion_repetida": 0.15,
+      "segundos_gancho": 3,
+      "gancho_debe_ser_unico": true
+    }
+  },
+  "youtube": {
+    "categoria_id": "27",
+    "contiene_contenido_sintetico": true,
+    "umbral_caida_seg3": 0.7
+  },
+  "max_cola_listos": 30,
+  "horas_publicacion_por_defecto": [
+    "12:00",
+    "15:00",
+    "18:00",
+    "20:00",
+    "21:30",
+    "23:00"
+  ]
+}
