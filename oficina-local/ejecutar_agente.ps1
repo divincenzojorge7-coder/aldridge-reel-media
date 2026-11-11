@@ -1,33 +1,47 @@
 <#
   Lanza un agente de la Oficina YouTube con Claude Code en modo no interactivo.
-  Uso:  powershell -ExecutionPolicy Bypass -File ejecutar_agente.ps1 -Rol produccion
-  Roles: tendencias, produccion, studio, retencion
+  Uso:  powershell -ExecutionPolicy Bypass -File ejecutar_agente.ps1 -Rol produccion -Canal canal2
+  Roles: tendencias, produccion, retencion (necesitan -Canal) y studio (sin -Canal: atiende a todos)
 #>
 param(
   [Parameter(Mandatory = $true)]
   [ValidateSet('tendencias', 'produccion', 'studio', 'retencion')]
-  [string]$Rol
+  [string]$Rol,
+  [string]$Canal = ''
 )
 
 $ErrorActionPreference = 'Stop'
+if ($Rol -ne 'studio' -and -not $Canal) { throw "El rol $Rol necesita -Canal (por ejemplo canal1)" }
+if ($Rol -eq 'studio') { $Canal = 'TODOS' }
+$Etiqueta = "$Rol-$Canal"
 $Oficina = $PSScriptRoot
 $Repo = Split-Path $Oficina -Parent
 $Logs = Join-Path $Oficina 'logs'
 New-Item -ItemType Directory -Force -Path $Logs | Out-Null
 
+# Studio: si la cuota de hoy ya no da para ninguna subida, ni siquiera arrancamos
+# Claude (ahorra uso de tu plan: Studio se lanza cada hora).
+if ($Rol -eq 'studio') {
+  try {
+    $q = (& python (Join-Path $Oficina 'herramientas\cuota.py') estado | Out-String) | ConvertFrom-Json
+    if ($q.subidas_aun_posibles_hoy -lt 1) { Write-Output "Sin cuota de subida hoy; no lanzo Studio."; exit 0 }
+  } catch { }   # si el contador falla, se lanza igualmente
+}
+
 # Candado: nunca dos copias del mismo agente a la vez
-$Candado = Join-Path $Logs "$Rol.lock"
+$Candado = Join-Path $Logs "$Etiqueta.lock"
 if (Test-Path $Candado) {
   $edad = (Get-Date) - (Get-Item $Candado).LastWriteTime
-  if ($edad.TotalHours -lt 3) { Write-Output "$Rol ya se esta ejecutando; salgo."; exit 0 }
+  if ($edad.TotalHours -lt 3) { Write-Output "$Etiqueta ya se esta ejecutando; salgo."; exit 0 }
   Remove-Item $Candado -Force   # candado viejo de una ejecucion que se colgo
 }
 New-Item -ItemType File -Path $Candado | Out-Null
 
 $Fecha = Get-Date -Format 'yyyyMMdd-HHmmss'
-$Log = Join-Path $Logs "$Rol-$Fecha.log"
+$Log = Join-Path $Logs "$Etiqueta-$Fecha.log"
 $Prompt = Get-Content (Join-Path $Oficina "agentes\$Rol.md") -Raw -Encoding UTF8
-$Prompt = "Fecha y hora local: $(Get-Date -Format 'yyyy-MM-dd HH:mm zzz').`n`n" + $Prompt
+$Prompt = "Fecha y hora local: $(Get-Date -Format 'yyyy-MM-dd HH:mm zzz').`nCanal asignado: $Canal`n`n" + $Prompt
+if ($Canal -ne 'TODOS') { $env:YT_CANAL = $Canal }
 
 try {
   Set-Location $Repo
@@ -42,13 +56,13 @@ try {
     $n = New-Object System.Windows.Forms.NotifyIcon
     $n.Icon = [System.Drawing.SystemIcons]::Information
     $n.Visible = $true
-    $n.ShowBalloonTip(15000, "Oficina YouTube - $Rol", $Aviso, 'Info')
+    $n.ShowBalloonTip(15000, "Oficina YouTube - $Etiqueta", $Aviso, 'Info')
     Start-Sleep -Seconds 16
     $n.Dispose()
   }
 }
 catch {
-  "ERROR al lanzar ${Rol}: $_" | Out-File -FilePath $Log -Append -Encoding UTF8
+  "ERROR al lanzar ${Etiqueta}: $_" | Out-File -FilePath $Log -Append -Encoding UTF8
 }
 finally {
   Remove-Item $Candado -Force -ErrorAction SilentlyContinue

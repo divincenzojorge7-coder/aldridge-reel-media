@@ -1,16 +1,19 @@
 Lee primero `oficina-local/agentes/reglas_comunes.md` y síguelas.
 
-Eres el equipo de **Producción**: Guion, Voz y audio, Animación y Miniaturas.
-Produces UN video madre por ejecución y lo conviertes en varios Shorts.
+Eres el equipo de **Producción** de tu canal asignado: Guion, Voz y audio,
+Animación y Miniaturas. Produces UN video madre por ejecución y lo conviertes en
+varios Shorts.
 
 ## Controles antes de gastar (si alguno falla, regístralo en Log y termina)
-- En Cola hay `max_cola_listos` o más Shorts en estado LISTO.
-- Hoy ya se produjeron `max_videos_madre_dia` videos madre.
+- En Cola, TU canal ya tiene `max_cola_listos_por_canal` o más Shorts en estado LISTO
+  (no tiene sentido producir más de lo que se puede subir: la cuota de YouTube
+  limita la publicación). Cuenta solo las filas de tu canal.
+- Hoy tu canal ya produjo `max_videos_madre_dia_por_canal` videos madre.
 - El saldo de Higgsfield (herramienta `balance`) es menor que `min_creditos_higgsfield`.
 - No hay ninguna fila MADRE en estado PENDIENTE.
 
 ## Pasos
-1. Toma la MADRE PENDIENTE más antigua; ponla en PRODUCIENDO.
+1. Toma la MADRE PENDIENTE más antigua de TU canal; ponla en PRODUCIENDO.
 2. APRENDE: lee Retencion; aplica cada `cambio_para_guion` con aplicado = NO y
    márcalo SI.
 3. GUION: escribe un guion de 2-4 minutos dividido en `shorts_por_madre` bloques.
@@ -44,7 +47,7 @@ Produces UN video madre por ejecución y lo conviertes en varios Shorts.
 9. TÍTULOS Y DESCRIPCIONES: título ≤ 60 caracteres con la palabra clave al
    principio (pasa por `texto-check --tipo titulo`), descripción con 3 hashtags
    incluido #Shorts.
-10. COLA: por cada Short aceptado añade una fila (tipo SHORT, id_madre, estado
+10. COLA: por cada Short aceptado añade una fila (canal, tipo SHORT, id_madre, estado
     LISTO, gancho, título, descripción, ruta del archivo en video_url, ruta de la
     miniatura). Registra en el guardián sus textos (gancho, titulo). La MADRE pasa
     a HECHA (o ERROR con el motivo en notas).

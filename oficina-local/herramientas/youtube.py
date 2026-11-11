@@ -1,7 +1,11 @@
 """Acceso directo a la API de YouTube: subir y programar, curva de retencion
 real (para la alarma del segundo 3) y busqueda de outliers (10x la media).
 
-Primera vez:  python herramientas/youtube.py auth
+Varios canales: un token por canal, un solo client_secret.json (un solo proyecto).
+  --canal canal1..canalN antes del comando, o la variable de entorno YT_CANAL.
+  La cuota diaria es del proyecto: la comparten todos los canales (ver cuota.py).
+
+Primera vez por canal:  python herramientas/youtube.py --canal canal2 auth
   (necesita datos/client_secret.json, ver README)
 
 Uso:
@@ -16,15 +20,21 @@ Cuota diaria por defecto: 10.000 unidades. Subir ~1.600, buscar 100, el resto ~1
 import argparse
 import datetime as dt
 import json
+import os
 import re
 import statistics
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import cuota  # noqa: E402
+
 BASE = Path(__file__).resolve().parent.parent
 CFG = json.loads((BASE / "config.json").read_text(encoding="utf-8"))
-SECRETO = BASE / "datos" / "client_secret.json"
-TOKEN = BASE / "datos" / "token_youtube.json"
+DATOS = Path(os.environ.get("OFICINA_DATOS", BASE / "datos"))
+SECRETO = DATOS / "client_secret.json"   # UNO para todos: un solo proyecto de Google Cloud
+CANAL = os.environ.get("YT_CANAL", "canal1")  # se cambia con --canal
+TOKEN = DATOS / f"token_youtube_{CANAL}.json"  # un token por canal
 SCOPES = [
     "https://www.googleapis.com/auth/youtube.upload",
     "https://www.googleapis.com/auth/youtube.readonly",
@@ -62,6 +72,10 @@ def segundos_iso(d):
 
 
 def subir(archivo, titulo, descripcion, miniatura=None, publicar_en=None, etiquetas=None):
+    if not cuota.puede("subida"):
+        return {"ok": False, "error": "cuota_agotada_hoy", "canal": CANAL,
+                "detalle": cuota.estado(), "accion": "No reintentar hoy: la cuota se reinicia a las 05:00 (Argentina)."}
+    from googleapiclient.errors import HttpError
     from googleapiclient.http import MediaFileUpload
     yt = api()
     status = {
@@ -80,14 +94,22 @@ def subir(archivo, titulo, descripcion, miniatura=None, publicar_en=None, etique
     req = yt.videos().insert(part="snippet,status", body=cuerpo,
                              media_body=MediaFileUpload(str(archivo), chunksize=-1, resumable=True))
     resp = None
-    while resp is None:
-        _, resp = req.next_chunk()
+    try:
+        while resp is None:
+            _, resp = req.next_chunk()
+    except HttpError as e:
+        if "quotaExceeded" in str(e) or "uploadLimitExceeded" in str(e):
+            cuota.marcar_agotada()
+            return {"ok": False, "error": "cuota_o_limite_de_subida", "canal": CANAL, "detalle": str(e)[:300]}
+        raise
+    cuota.gastar("subida")
     vid = resp["id"]
-    r = {"ok": True, "video_id": vid, "url": f"https://youtube.com/shorts/{vid}",
+    r = {"ok": True, "canal": CANAL, "video_id": vid, "url": f"https://youtube.com/shorts/{vid}",
          "programado_para": publicar_en}
     if miniatura:
         try:
             yt.thumbnails().set(videoId=vid, media_body=MediaFileUpload(str(miniatura))).execute()
+            cuota.gastar("miniatura")
             r["miniatura"] = "ok"
         except Exception as e:  # los canales sin verificar no pueden subir miniaturas
             r["miniatura"] = f"no aplicada: {e}"
@@ -129,11 +151,14 @@ def retencion(video_id):
 
 
 def outliers(consulta, dias=7, maximo=25):
+    if not cuota.puede("busqueda"):
+        return {"ok": False, "error": "cuota_agotada_hoy", "detalle": cuota.estado()}
     yt = api()
     desde = (dt.datetime.utcnow() - dt.timedelta(days=dias)).strftime("%Y-%m-%dT%H:%M:%SZ")
     res = yt.search().list(part="snippet", q=consulta, type="video", order="viewCount",
                            publishedAfter=desde, maxResults=min(maximo, 50),
                            relevanceLanguage=CFG["idioma"]).execute()
+    cuota.gastar("busqueda")
     ids = [i["id"]["videoId"] for i in res.get("items", [])]
     if not ids:
         return {"ok": True, "videos": []}
@@ -160,6 +185,7 @@ def outliers(consulta, dias=7, maximo=25):
             "mediana_canal": media, "multiplo": mult, "alarma_10x": bool(mult and mult >= 10),
             "duracion_seg": segundos_iso(v["contentDetails"]["duration"]),
         })
+    cuota.gastar("lectura", 2 + 3 * len(medias))  # videos.list, channels.list y playlistItems
     salida.sort(key=lambda x: -(x["multiplo"] or 0))
     return {"ok": True, "consulta": consulta, "videos": salida,
             "nota": "multiplo = vistas / mediana de los ultimos 20 videos del canal"}
@@ -176,7 +202,9 @@ def mis_videos(maximo=50):
 
 
 def main(argv=None):
+    global CANAL, TOKEN
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    p.add_argument("--canal", default=CANAL, help="canal1..canal4 (cada uno tiene su propio token)")
     sub = p.add_subparsers(dest="cmd", required=True)
     sub.add_parser("auth")
     s = sub.add_parser("subir")
@@ -195,9 +223,11 @@ def main(argv=None):
     s = sub.add_parser("mis-videos")
     s.add_argument("--max", type=int, default=50)
     a = p.parse_args(argv)
+    CANAL = a.canal
+    TOKEN = DATOS / f"token_youtube_{CANAL}.json"
     if a.cmd == "auth":
         credenciales(interactivo=True)
-        r = {"ok": True, "token": str(TOKEN)}
+        r = {"ok": True, "canal": CANAL, "token": str(TOKEN)}
     elif a.cmd == "subir":
         r = subir(a.archivo, a.titulo, a.descripcion, a.miniatura, a.publicar_en,
                   [e.strip() for e in a.etiquetas.split(",") if e.strip()])

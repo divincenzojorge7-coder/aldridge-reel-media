@@ -6,17 +6,44 @@ computadora Windows siempre encendida. La computadora hace el trabajo pesado
 **Oficina YouTube - Centro de control** sigue siendo el panel para ver y pausar
 todo desde el móvil.
 
+## Varios canales (4 por defecto)
+
+Los canales están en `config.json` → `canales` y en la pestaña **Canales** de la
+hoja (cada uno con su nicho; deben ser distintos). El proceso es el mismo para
+todos: Tendencias, Producción y Retención corren **una vez por canal** (con las
+horas desfasadas) y Studio es **una sola tarea** para todos.
+
+**La cuota de YouTube es del proyecto de Google Cloud, no del canal.** Los 4
+canales comparten las mismas 10.000 unidades diarias, o sea unas **5 subidas al
+día entre todos** (`herramientas/cuota.py estado` lo muestra). Studio las reparte
+por turnos y Producción solo fabrica lo que cabe en la cola de cada canal
+(`max_cola_listos`), así que no se gastan créditos en videos que no se pueden
+subir. Para publicar más hay que pedir ampliación de cuota a Google.
+
+> No crees un proyecto de Google Cloud por canal para conseguir más cuota: las
+> políticas de la API de YouTube prohíben usar varios proyectos para el mismo
+> fin con el objetivo de esquivar la cuota, y puede costarte el acceso a la API.
+> Una sola credencial (`client_secret.json`) para todos; un token por canal.
+
+Autorizar cada canal (una vez), eligiendo el canal correcto en el navegador:
+```powershell
+python oficina-local\herramientas\youtube.py --canal canal1 auth
+python oficina-local\herramientas\youtube.py --canal canal2 auth
+```
+Para añadir o quitar canales, edita `config.json` y la pestaña Canales, y vuelve
+a ejecutar `instalar.ps1`.
+
 ## Cómo funciona
 
 | Agente | Cuándo | Qué hace |
 |---|---|---|
-| Tendencias | diario 07:13 | Elige nicho, busca videos con 10× la mediana de su canal (alarma) y deja temas nuevos en la Cola |
-| Producción | 01:37, 06:37, 10:37, 16:37, 21:37 | 1 video madre por ejecución → guion por bloques, voz y animación (Higgsfield), corte en Shorts, subtítulos, 10 portadas y elige una |
-| Studio | cada hora | Sube y programa en YouTube a las mejores horas, máximo 6 al día |
-| Retención | diario 23:21 | Lee la curva real; si se pierde audiencia antes del segundo 3, deja una instrucción para el guionista |
+| Tendencias | diario 07:13 (+7 min por canal) | Elige nicho, busca videos con 10× la mediana de su canal (alarma) y deja temas nuevos en la Cola |
+| Producción | 02:37 y 14:37 (+25 min por canal) | 1 video madre por ejecución → guion por bloques, voz y animación (Higgsfield), corte en Shorts, subtítulos, 10 portadas y elige una |
+| Studio | cada hora, un solo agente para todos los canales | Reparte por turnos la cuota diaria y sube/programa en YouTube |
+| Retención | diario 23:21 (+6 min por canal) | Lee la curva real; si se pierde audiencia antes del segundo 3, deja una instrucción para el guionista |
 
-Producción se frena sola cuando hay 30 Shorts listos sin publicar, así que el
-gasto se ajusta al ritmo de publicación.
+Producción se frena sola cuando su canal tiene 8 Shorts listos sin publicar, así
+que el gasto se ajusta al ritmo real de publicación.
 
 ## Anti-repetición (guardián de originalidad)
 
@@ -91,8 +118,12 @@ Los umbrales están en `config.json` → `originalidad`.
   auditoría de cumplimiento de la API de YouTube (formulario gratuito, puede
   tardar semanas). Mientras tanto, los Shorts se suben y programan pero quedan
   privados.
-- **Cuota**: 10.000 unidades diarias por defecto; cada subida gasta unas 1.600
-  (de ahí el máximo de 6 al día). Para más, pide ampliación de cuota a Google.
+- **Cuota**: 10.000 unidades diarias por defecto para TODOS los canales; cada
+  subida gasta unas 1.650 y cada búsqueda 100. Si se agota, las subidas fallan
+  con `quotaExceeded`, sin penalización, y se retoman a las 05:00 (Argentina).
+  Para más, pide ampliación de cuota a Google.
+- **Uso de tu plan de Claude**: son unas 16 ejecuciones diarias de agentes más Studio
+  cada hora (si hay cuota). Vigila el consumo la primera semana.
 - **Contenido con IA**: la subida marca el video como contenido sintético, como
   exige YouTube. Publicar mucho contenido automático y parecido puede costar la
   monetización; el guardián ayuda, pero revisa el Log y el canal con frecuencia.
@@ -110,7 +141,8 @@ oficina-local/
   herramientas/
     originalidad.py      guardián anti-repetición
     shorts.py            corte en Shorts sin solapes, 9:16, audio, subtítulos
-    youtube.py           subir/programar, retención real, outliers 10x
+    youtube.py           subir/programar, retención real, outliers 10x (--canal)
+    cuota.py             libro de cuota diaria compartida por todos los canales
   datos/                 base de originalidad, videos, credenciales (no se sube a git)
   logs/                  registros de cada ejecución (no se sube a git)
 ```

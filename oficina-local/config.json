@@ -1,7 +1,7 @@
 {
   "hoja_control_id": "1L3mB2jceeSCxaedhLo5_e3cE1_Oc61UOnhpxDV87AIw",
   "idioma": "es",
-  "max_videos_madre_dia": 5,
+  "max_videos_madre_dia": 2,
   "shorts_por_madre": 6,
   "duracion_madre_seg": [
     120,
@@ -45,7 +45,7 @@
     "contiene_contenido_sintetico": true,
     "umbral_caida_seg3": 0.7
   },
-  "max_cola_listos": 30,
+  "max_cola_listos": 8,
   "horas_publicacion_por_defecto": [
     "12:00",
     "15:00",
@@ -53,5 +53,34 @@
     "20:00",
     "21:30",
     "23:00"
-  ]
+  ],
+  "max_busquedas_dia_por_canal": 2,
+  "canales": [
+    {
+      "id": "canal1",
+      "nombre": "Canal 1"
+    },
+    {
+      "id": "canal2",
+      "nombre": "Canal 2"
+    },
+    {
+      "id": "canal3",
+      "nombre": "Canal 3"
+    },
+    {
+      "id": "canal4",
+      "nombre": "Canal 4"
+    }
+  ],
+  "cuota": {
+    "limite_diario": 10000,
+    "zona": "America/Los_Angeles",
+    "coste": {
+      "subida": 1600,
+      "miniatura": 50,
+      "busqueda": 100,
+      "lectura": 1
+    }
+  }
 }
