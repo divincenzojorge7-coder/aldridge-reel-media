@@ -9,7 +9,9 @@ todo desde el móvil.
 ## Varios canales (4 por defecto)
 
 Los canales están en `config.json` → `canales` y en la pestaña **Canales** de la
-hoja (cada uno con su nicho; deben ser distintos). El proceso es el mismo para
+hoja (cada uno con su nicho fijo y distinto: Historia y Misterios, Ciencia y
+Espacio, Dinero y Finanzas, Mente y Conducta; `originalidad.py nichos-check`
+verifica que no se solapen). El proceso es el mismo para
 todos: Tendencias, Producción y Retención corren **una vez por canal** (con las
 horas desfasadas) y Studio es **una sola tarea** para todos.
 

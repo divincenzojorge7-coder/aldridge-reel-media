@@ -58,19 +58,23 @@
   "canales": [
     {
       "id": "canal1",
-      "nombre": "Canal 1"
+      "nombre": "Historia y Misterios",
+      "nicho": "historia del mundo, civilizaciones antiguas, enigmas y casos sin resolver"
     },
     {
       "id": "canal2",
-      "nombre": "Canal 2"
+      "nombre": "Ciencia y Espacio",
+      "nicho": "astronomía, física, biología, tecnología y descubrimientos científicos"
     },
     {
       "id": "canal3",
-      "nombre": "Canal 3"
+      "nombre": "Dinero y Finanzas",
+      "nicho": "finanzas personales, ahorro, inversión básica y errores con el dinero"
     },
     {
       "id": "canal4",
-      "nombre": "Canal 4"
+      "nombre": "Mente y Conducta",
+      "nicho": "psicología, hábitos, sesgos cognitivos y comportamiento humano"
     }
   ],
   "cuota": {

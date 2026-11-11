@@ -248,6 +248,31 @@ def video_registrar(con, item_id, archivo, madre_id=None):
     con.commit()
     return {"registrado": True, "id": item_id, "fotogramas": len(propios)}
 
+def nichos_check():
+    """Comprueba que los canales de config.json tengan nichos distintos entre si."""
+    canales = CONFIG.get("canales", [])
+    problemas = []
+    vectores = []
+    for ch in canales:
+        n = (ch.get("nicho") or "").strip()
+        if not n:
+            problemas.append(f"{ch['id']}: nicho vacio")
+            continue
+        motor, v = vectorizar(n)
+        vectores.append((ch["id"], n, motor, v))
+    umbral = UMBRAL["texto"]["tema"] if vectores and vectores[0][2] == "st" else UMBRAL["texto_respaldo"]["tema"]
+    pares = []
+    for i in range(len(vectores)):
+        for j in range(i + 1, len(vectores)):
+            a, b = vectores[i], vectores[j]
+            sim = float(np.dot(a[3], b[3]))
+            pares.append({"canales": [a[0], b[0]], "similitud": round(sim, 3)})
+            if sim >= umbral:
+                problemas.append(f"{a[0]} y {b[0]} tienen nichos demasiado parecidos ({sim:.2f} >= {umbral})")
+    return {"ok": not problemas, "problemas": problemas, "umbral": umbral,
+            "mas_parecidos": sorted(pares, key=lambda x: -x["similitud"])[:3]}
+
+
 # ---------------------------------------------------------------- CLI
 
 def main(argv=None):
@@ -265,6 +290,7 @@ def main(argv=None):
         s.add_argument("--archivo", required=True)
         s.add_argument("--madre")
     sub.add_parser("estado")
+    sub.add_parser("nichos-check")
     a = p.parse_args(argv)
     con = conectar()
     if a.cmd == "texto-check":
@@ -275,6 +301,10 @@ def main(argv=None):
         r = video_check(con, a.id, a.archivo, a.madre)
     elif a.cmd == "video-registrar":
         r = video_registrar(con, a.id, a.archivo, a.madre)
+    elif a.cmd == "nichos-check":
+        r = nichos_check()
+        print(json.dumps(r, ensure_ascii=False, indent=2))
+        return 0 if r["ok"] else 1
     else:
         r = {
             "textos": dict(con.execute("SELECT tipo, COUNT(*) FROM textos GROUP BY tipo").fetchall()),

@@ -3,15 +3,15 @@ Lee primero `oficina-local/agentes/reglas_comunes.md` y síguelas.
 Eres el integrante **Tendencias** de tu canal asignado.
 
 1. Lee Config y las pestañas Tendencias y Cola.
-2. NICHO: lee el nicho de tu canal en la pestaña Canales. Si está vacío o la última
-   elección tiene más de 7 días, y comprobando que NO coincide con el nicho de otro canal, compara
-   3-5 nichos aptos para Shorts faceless en español. Para cada uno usa
-   `python oficina-local/herramientas/youtube.py outliers --consulta "<nicho>" --dias 7`
-   (cada búsqueda gasta 100 unidades de la cuota COMPARTIDA: haz como mucho
-   `max_busquedas_dia_por_canal` hoy) y,
-   si te sobran créditos, herramientas de vidIQ de coste 0. Elige el de más
-   crecimiento sostenido y escríbelo en la columna `nicho` de tu fila de Canales.
-3. DENTRO DEL NICHO: busca outliers con 2-4 consultas distintas. Añade a Tendencias
+2. NICHO FIJO: tu canal tiene un nicho asignado en la pestaña Canales (y en
+   `config.json`). NO lo cambies ni lo ensanches, y no tomes temas de los nichos de
+   los otros canales: cada canal debe tratar un tema distinto para que no haya
+   repetición entre canales ni YouTube los vea como contenido en serie. Ejecuta
+   `python oficina-local/herramientas/originalidad.py nichos-check`; si falla,
+   escribe `FALLO: nichos solapados` y termina. Dentro del nicho, elige los
+   subtemas con más tracción.
+3. DENTRO DEL NICHO: busca outliers con las consultas que permita tu presupuesto
+   de búsquedas (`max_busquedas_dia_por_canal`), todas dentro de tu nicho. Añade a Tendencias
    una fila por video relevante (fecha, nicho, tema, url, vistas, mediana del canal,
    múltiplo, alarma_10x, usado = NO). Usa los números que devuelve la herramienta,
    sin redondear a tu gusto.

@@ -12,7 +12,8 @@ nombre, nicho, estado). Cada ejecución recibe al principio una línea
 - Trabaja SOLO con tu canal: filtra Cola y Tendencias por la columna `canal` y
   escribe siempre `canal` en las filas nuevas. Si la fila del canal en Canales
   tiene estado distinto de ACTIVO, registra en Log y termina.
-- Cada canal tiene su propio nicho. Los nichos no deben coincidir entre canales.
+- Cada canal tiene su propio nicho FIJO (Canales / config.json) y los nichos no
+  coinciden. Si un tema cae en el nicho de otro canal, descártalo.
 - Los ids llevan el canal: `AAAAMMDD-<canal_id>-n` (madre) y `...-sN` (Short).
 - El guardián de originalidad es COMPARTIDO: tampoco se puede repetir contenido
   entre canales distintos.
