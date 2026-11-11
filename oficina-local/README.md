@@ -6,6 +6,34 @@ computadora Windows siempre encendida. La computadora hace el trabajo pesado
 **Oficina YouTube - Centro de control** sigue siendo el panel para ver y pausar
 todo desde el móvil.
 
+## Cómo se publica (sin solicitar nada a Google)
+
+Los videos subidos con la API de YouTube desde un proyecto sin auditar quedan
+**bloqueados en privado**. Para no tener que pedir la auditoría, Studio publica
+por **Metricool**, que ya tiene la aprobación de YouTube (`publicacion.metodo:
+"metricool"` en `config.json`). Pasos, una sola vez:
+
+1. En Metricool, una **marca por canal** de YouTube, con el canal conectado.
+   Apunta el `blogId` de cada marca en la pestaña Canales de la hoja
+   (`metricool_blog_id`) y pon `youtube_en_metricool` = SI. Comprueba en tu plan de
+   Metricool cuántas marcas y publicaciones al mes admite.
+2. Instala **Google Drive para escritorio** en la computadora y vincula tu Google
+   Drive en Metricool (Ajustes → cuenta). Apunta la carpeta sincronizada en
+   `config.json` → `publicacion.carpeta_drive`, por ejemplo
+   `G:\Mi unidad\OficinaYouTube`.
+3. El flujo: Producción corta el Short → Studio lo copia a esa carpeta → lo localiza
+   en Drive con el conector → Metricool lo programa en YouTube.
+
+No uses automatización del navegador sobre YouTube Studio: las condiciones de
+YouTube prohíben el acceso automatizado fuera de la API y puede costar el canal.
+Si en el futuro consigues la auditoría, cambia a `"api_youtube"`.
+
+La API de YouTube sigue haciendo falta solo para **leer** (curva de retención real y
+búsqueda de outliers), sin ninguna solicitud a Google; la pantalla de
+consentimiento se deja publicada pero sin verificar (aparece un aviso que aceptas
+tú). Si no quieres tocar Google Cloud, Retención puede usar solo las métricas de
+Metricool (sin la curva por segundo).
+
 ## Varios canales (4 por defecto)
 
 Los canales están en `config.json` → `canales` y en la pestaña **Canales** de la
@@ -15,9 +43,9 @@ verifica que no se solapen). El proceso es el mismo para
 todos: Tendencias, Producción y Retención corren **una vez por canal** (con las
 horas desfasadas) y Studio es **una sola tarea** para todos.
 
-**La cuota de YouTube es del proyecto de Google Cloud, no del canal.** Los 4
-canales comparten las mismas 10.000 unidades diarias, o sea unas **5 subidas al
-día entre todos** (`herramientas/cuota.py estado` lo muestra). Studio las reparte
+**Solo con el método `api_youtube`**: la cuota de YouTube es del proyecto de Google
+Cloud, no del canal. Los 4 canales comparten las mismas 10.000 unidades diarias, o
+sea unas **5 subidas al día entre todos** (`herramientas/cuota.py estado` lo muestra). Studio las reparte
 por turnos y Producción solo fabrica lo que cabe en la cola de cada canal
 (`max_cola_listos`), así que no se gastan créditos en videos que no se pueden
 subir. Para publicar más hay que pedir ampliación de cuota a Google.
@@ -41,7 +69,7 @@ a ejecutar `instalar.ps1`.
 |---|---|---|
 | Tendencias | diario 07:13 (+7 min por canal) | Elige nicho, busca videos con 10× la mediana de su canal (alarma) y deja temas nuevos en la Cola |
 | Producción | 02:37 y 14:37 (+25 min por canal) | 1 video madre por ejecución → guion por bloques, voz y animación (Higgsfield), corte en Shorts, subtítulos, 10 portadas y elige una |
-| Studio | cada hora, un solo agente para todos los canales | Reparte por turnos la cuota diaria y sube/programa en YouTube |
+| Studio | cada hora, un solo agente para todos los canales | Programa en YouTube por Metricool a las mejores horas, repartiendo entre canales |
 | Retención | diario 23:21 (+6 min por canal) | Lee la curva real; si se pierde audiencia antes del segundo 3, deja una instrucción para el guionista |
 
 Producción se frena sola cuando su canal tiene 8 Shorts listos sin publicar, así
@@ -143,7 +171,8 @@ oficina-local/
   herramientas/
     originalidad.py      guardián anti-repetición
     shorts.py            corte en Shorts sin solapes, 9:16, audio, subtítulos
-    youtube.py           subir/programar, retención real, outliers 10x (--canal)
+    publicar_prep.py     copia los Shorts a la carpeta de Drive que lee Metricool
+    youtube.py           subir/programar (solo api_youtube), retención real, outliers 10x (--canal)
     cuota.py             libro de cuota diaria compartida por todos los canales
   datos/                 base de originalidad, videos, credenciales (no se sube a git)
   logs/                  registros de cada ejecución (no se sube a git)

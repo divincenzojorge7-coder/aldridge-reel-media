@@ -12,7 +12,6 @@
     58
   ],
   "publicar_madre": false,
-  "max_publicaciones_dia": 6,
   "min_horas_entre_publicaciones": 2,
   "min_creditos_higgsfield": 200,
   "modelo_embeddings": "paraphrase-multilingual-MiniLM-L12-v2",
@@ -86,5 +85,11 @@
       "busqueda": 100,
       "lectura": 1
     }
+  },
+  "publicacion": {
+    "metodo": "metricool",
+    "carpeta_drive": "",
+    "max_publicaciones_dia_por_canal": 4,
+    "min_horas_entre_publicaciones": 2
   }
 }

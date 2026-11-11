@@ -19,9 +19,10 @@ $Repo = Split-Path $Oficina -Parent
 $Logs = Join-Path $Oficina 'logs'
 New-Item -ItemType Directory -Force -Path $Logs | Out-Null
 
-# Studio: si la cuota de hoy ya no da para ninguna subida, ni siquiera arrancamos
-# Claude (ahorra uso de tu plan: Studio se lanza cada hora).
-if ($Rol -eq 'studio') {
+# Studio con la API de YouTube: si la cuota de hoy ya no da para ninguna subida,
+# ni siquiera arrancamos Claude. Con Metricool no hay cuota local que consultar.
+$Metodo = (Get-Content (Join-Path $Oficina 'config.json') -Raw -Encoding UTF8 | ConvertFrom-Json).publicacion.metodo
+if ($Rol -eq 'studio' -and $Metodo -eq 'api_youtube') {
   try {
     $q = (& python (Join-Path $Oficina 'herramientas\cuota.py') estado | Out-String) | ConvertFrom-Json
     if ($q.subidas_aun_posibles_hoy -lt 1) { Write-Output "Sin cuota de subida hoy; no lanzo Studio."; exit 0 }

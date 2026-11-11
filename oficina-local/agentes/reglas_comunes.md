@@ -20,7 +20,7 @@ nombre, nicho, estado). Cada ejecución recibe al principio una línea
 - Las herramientas leen el canal de la variable de entorno `YT_CANAL` (ya
   puesta); no la cambies.
 
-## Cuota de YouTube (compartida por todos los canales)
+## Cuota de YouTube (solo si se publica con `api_youtube`)
 La cuota diaria de la API es del proyecto, no del canal. Consúltala con
 `python oficina-local/herramientas/cuota.py estado`. Una subida cuesta ~1.650
 unidades y una búsqueda 100, de un total de 10.000 al día: caben unas 5-6
